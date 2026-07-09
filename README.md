@@ -70,6 +70,19 @@ export BITAXE_IPS="192.168.1.223,192.168.1.224"   # comma-separated, at least on
 ~/.cargo/bin/cargo run --release   # builds, flashes over USB, and opens the serial monitor
 ```
 
+## Known gap: flash partition sizing
+
+Rust std + WiFi + mbedTLS + HTTP + WS binaries commonly land in the 1.5-2.5MB range,
+which can overflow ESP-IDF's default single-app partition table (~1MB factory partition)
+on a 4MB-flash board. A `CONFIG_PARTITION_TABLE_CUSTOM` + `partitions.csv` attempt was
+tried and reverted here - `esp-idf-sys`'s build script expects the custom CSV at a
+specific generated path (`target/.../esp-idf-sys-*/out/partitions.csv`) that a plain
+`sdkconfig.defaults` entry didn't populate, and the exact `embuild`/`esp-idf-sys`
+mechanism for wiring a custom partition table wasn't confirmed before v0's build budget
+ran out. v0 (WiFi + plain HTTP, no TLS/WS yet) is small enough this doesn't matter yet -
+revisit properly before adding the leaderboard/relay TLS clients in v1/v2, since that's
+when the real risk of overflow shows up.
+
 ## Status: v0 (bring-up)
 
 - [x] WiFi STA connect (`src/wifi.rs`)

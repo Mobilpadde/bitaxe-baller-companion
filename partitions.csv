@@ -1,8 +1,0 @@
-# Name,   Type, SubType, Offset,  Size
-# Rust std + WiFi + mbedTLS + HTTP + JSON binaries commonly land in the
-# 1.5-2.5MB range - the ESP-IDF default single-app table (~1MB factory
-# partition) overflows on exactly this kind of project. 3MB leaves headroom
-# for the relay/leaderboard TLS code added in v1/v2 on a 4MB-flash board.
-nvs,      data, nvs,     0x9000,  0x6000,
-phy_init, data, phy,     0xf000,  0x1000,
-factory,  app,  factory, 0x10000, 0x300000,
