@@ -1,4 +1,4 @@
-# bitaxe-companion-fw
+# bitaxe-baller-companion
 
 Standalone ESP32 firmware that polls a handful of [Bitaxe](https://github.com/bitaxeorg) miners
 on the LAN and phones home the same two ways [bitaxe-baller](https://github.com/) does from a PC:
@@ -46,6 +46,11 @@ Build through the actual rustup proxy so an override always resolves correctly:
 ```bash
 ~/.cargo/bin/cargo build --release
 ```
+
+If you ever move or rename this directory, `cargo build` will fail with something like
+`Failed to list cmake-file-api reply directory` - CMake bakes the absolute build path into
+`target/xtensa-esp32-espidf`'s cache. Fix: `rm -rf target/xtensa-esp32-espidf` and rebuild
+(the downloaded ESP-IDF SDK itself doesn't need to be re-fetched).
 
 ## One-time setup
 

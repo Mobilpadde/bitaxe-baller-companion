@@ -1,5 +1,5 @@
 [package]
-name = "bitaxe-companion-fw"
+name = "bitaxe-baller-companion"
 version = "0.1.0"
 authors = ["Mads B. Cordes <Mobilpadde@gmail.com>"]
 edition = "2021"
@@ -7,7 +7,7 @@ resolver = "2"
 rust-version = "1.82"
 
 [[bin]]
-name = "bitaxe-companion-fw"
+name = "bitaxe-baller-companion"
 harness = false # do not use the built-in cargo test harness -> resolve rust-analyzer errors
 
 [profile.release]
