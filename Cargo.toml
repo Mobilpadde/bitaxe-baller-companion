@@ -6,6 +6,7 @@ edition = "2021"
 resolver = "2"
 rust-version = "1.82"
 repository = "https://github.com/Mobilpadde/bitaxe-baller-companion"
+license = "MIT"
 
 [[bin]]
 name = "bitaxe-baller-companion"
