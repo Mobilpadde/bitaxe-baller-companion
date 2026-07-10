@@ -3,15 +3,17 @@
 Standalone ESP32 firmware that polls a handful of [Bitaxe](https://github.com/bitaxeorg) miners
 on the LAN and phones home the same two ways [bitaxe-baller](https://github.com/465media/bitaxe-baller) does from a PC:
 
-- **Leaderboard** - HTTPS POST to `bitaxeballer.com/api/leaderboard/submit` on a new
-  career-best share, plus a 30min keep-alive otherwise.
-- **Relay** - a long-lived WSS connection to `relay.bitaxeballer.com` so the existing
-  remote-dashboard/mobile clients can reach these Bitaxes without a PC running 24/7.
+- **Leaderboard** (implemented) - HTTPS POST to `bitaxeballer.com/api/leaderboard/submit`
+  on a new career-best share, plus a 30min keep-alive otherwise.
+- **Relay** (planned, v2 - not started) - a long-lived WSS connection to
+  `relay.bitaxeballer.com` so the existing remote-dashboard/mobile clients can reach these
+  Bitaxes without a PC running 24/7.
 
 No local web UI, no tuning, no firmware flashing - read-only monitoring + phone-home only.
-See the design writeup this was scaffolded from for the full protocol reference (envelope
-format, auth, throttle semantics) - this repo re-implements those from scratch in Rust,
-it does not share code with bitaxe-baller.
+The leaderboard/relay protocol (envelope format, auth, throttle semantics) was reverse-engineered
+directly from bitaxe-baller's own source (`app.py`, `relay_client.py`, `relay/protocol.py`,
+`relay/main.py`) and the public [leaderboard rules](https://bitaxeballer.com/leaderboard-rules.html) -
+this repo re-implements those from scratch in Rust, it does not share code with bitaxe-baller.
 
 ## Why `esp-idf-svc` (std), not `esp-hal`+Embassy (no_std)
 
@@ -61,9 +63,10 @@ espup install                          # installs the `esp` toolchain (Xtensa ru
 ```
 
 First `~/.cargo/bin/cargo build` also triggers a **one-time download of the ESP-IDF SDK**
-(pinned to v5.5.3 in `.cargo/config.toml`, ~1-2GB with its toolchain/submodules) into
-`ESP_IDF_TOOLS_INSTALL_DIR` (`workspace/`, see `.cargo/config.toml`). Expect this to take a
-while on first build.
+(pinned to v5.5.3 in `.cargo/config.toml`, ~1-2GB with its toolchain/submodules). `.cargo/config.toml`
+sets `ESP_IDF_TOOLS_INSTALL_DIR = "workspace"`, which despite the name does **not** create a
+`workspace/` folder - `esp-idf-sys`'s build script hardcodes that keyword to a `.embuild/`
+subdirectory of the workspace root instead. Expect the download to take a while on first build.
 
 ```bash
 export WIFI_SSID="your-ssid"
@@ -110,6 +113,12 @@ at `CONFIG_PARTITION_TABLE_CUSTOM`, abandoned because it wasn't needed yet).
 **Known simplification:** `hashrate_th_avg` in the leaderboard payload is the Bitaxe's
 instantaneous hash rate, not bitaxe-baller's 15-minute rolling average - revisit with a
 ring buffer per device if the noise turns out to matter for leaderboard ranking.
+
+**Known limitation:** `device::poll` sets no explicit HTTP timeout, so it falls back to
+ESP-IDF's 5s default. Polling is sequential across all configured `BITAXE_IPS`, so one
+unreachable Bitaxe adds up to ~5s of stall per poll cycle for every *other* configured
+device too - only matters once you configure more than one, and hasn't been hit yet since
+testing has only ever used a single Bitaxe.
 
 **Permanently out of scope:** tuning/pool-config writes, firmware flashing, history/charts,
 multi-tenant fleets - see the design writeup for why.

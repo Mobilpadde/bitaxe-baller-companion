@@ -45,7 +45,9 @@ espup install                          # installs the `esp` toolchain (Xtensa ru
 ```
 
 First build also triggers a one-time download of the ESP-IDF SDK (pinned to v5.5.3 in
-`.cargo/config.toml`, ~1-2GB) into `ESP_IDF_TOOLS_INSTALL_DIR` (`workspace/`).
+`.cargo/config.toml`, ~1-2GB). `.cargo/config.toml` sets `ESP_IDF_TOOLS_INSTALL_DIR = "workspace"`,
+which despite the name lands in `.embuild/`, not a literal `workspace/` folder - that's an
+`esp-idf-sys` build-script keyword, not a path (confirmed against its `common.rs` source).
 
 ### Known gotchas
 
