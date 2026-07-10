@@ -35,7 +35,7 @@ If `esp`'s own `cargo` binary is ahead of the rustup shim on `PATH`:
 
 ```
 $ which cargo
-/home/mc/.rustup/toolchains/esp/bin/cargo   # <- the Xtensa-fork cargo, NOT the rustup proxy
+$HOME/.rustup/toolchains/esp/bin/cargo   # <- the Xtensa-fork cargo, NOT the rustup proxy
 ```
 
 it happens to work here since this project *wants* the `esp` toolchain anyway, but it's
