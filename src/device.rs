@@ -15,9 +15,9 @@ pub struct SystemInfo {
     #[serde(rename = "vrTemp")]
     pub vr_temp: Option<f64>,
     pub power: Option<f64>,
-    #[serde(rename = "bestDiff")]
+    #[serde(rename = "bestDiff", deserialize_with = "de_opt_diff")]
     pub best_diff: Option<String>,
-    #[serde(rename = "bestSessionDiff")]
+    #[serde(rename = "bestSessionDiff", deserialize_with = "de_opt_diff")]
     pub best_session_diff: Option<String>,
     #[serde(rename = "sharesAccepted")]
     pub shares_accepted: Option<u64>,
@@ -29,6 +29,24 @@ pub struct SystemInfo {
     pub asic_model: Option<String>,
     #[serde(rename = "uptimeSeconds")]
     pub uptime_seconds: Option<u64>,
+}
+
+// ponytail: some AxeOS firmware versions send bestDiff/bestSessionDiff as a raw
+// number instead of a formatted string ("911.5M") - accept either.
+fn de_opt_diff<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum DiffValue {
+        Str(String),
+        Num(f64),
+    }
+    Ok(Option::<DiffValue>::deserialize(deserializer)?.map(|v| match v {
+        DiffValue::Str(s) => s,
+        DiffValue::Num(n) => n.to_string(),
+    }))
 }
 
 /// Polls one Bitaxe over plain LAN HTTP (no TLS - this never leaves the LAN).
