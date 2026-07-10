@@ -7,6 +7,8 @@ pub fn connect(wifi: &mut BlockingWifi<EspWifi<'static>>, ssid: &str, password: 
     let config = Configuration::Client(ClientConfiguration {
         ssid: ssid.try_into().expect("WIFI_SSID must be <= 32 bytes"),
         bssid: None,
+        // This is a minimum threshold (maps to wifi_sta_config_t.threshold.authmode), not an
+        // exact match - a WPA3-SAE AP is accepted too since it's stronger than WPA2Personal.
         auth_method: AuthMethod::WPA2Personal,
         password: password.try_into().expect("WIFI_PASS must be <= 64 bytes"),
         channel: None,
