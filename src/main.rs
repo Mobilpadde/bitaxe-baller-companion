@@ -4,11 +4,13 @@ use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::wifi::{BlockingWifi, EspWifi};
 use log::{info, warn};
 
+mod config;
 mod device;
+mod leaderboard;
 mod wifi;
 
-// v0 bring-up: WiFi + Bitaxe IPs are compile-time env vars (see README).
-// v1 replaces this with a captive-portal config flow + NVS persistence.
+// WiFi creds + Bitaxe IPs are still compile-time env vars (see README) - captive-portal
+// provisioning is deferred; install_uuid is the one thing NVS-persisted so far (config.rs).
 const WIFI_SSID: &str = env!("WIFI_SSID");
 const WIFI_PASS: &str = env!("WIFI_PASS");
 const BITAXE_IPS: &str = env!("BITAXE_IPS");
@@ -22,10 +24,19 @@ fn main() -> anyhow::Result<()> {
     let nvs = EspDefaultNvsPartition::take()?;
 
     let mut esp_wifi = BlockingWifi::wrap(
-        EspWifi::new(peripherals.modem, sys_loop.clone(), Some(nvs))?,
+        EspWifi::new(peripherals.modem, sys_loop.clone(), Some(nvs.clone()))?,
         sys_loop,
     )?;
     wifi::connect(&mut esp_wifi, WIFI_SSID, WIFI_PASS)?;
+
+    let install_uuid = config::install_uuid(nvs)?;
+    info!("install_uuid: {install_uuid}");
+    let mut leaderboard = leaderboard::Leaderboard::from_env(install_uuid);
+    if leaderboard.is_none() {
+        info!(
+            "leaderboard disabled - set LEADERBOARD_EMAIL + LEADERBOARD_DISPLAY_NAME to enable"
+        );
+    }
 
     let ips: Vec<&str> = BITAXE_IPS
         .split(',')
@@ -40,7 +51,12 @@ fn main() -> anyhow::Result<()> {
     loop {
         for ip in &ips {
             match device::poll(ip) {
-                Ok(snapshot) => info!("{ip}: {snapshot:?}"),
+                Ok(snapshot) => {
+                    info!("{ip}: {snapshot:?}");
+                    if let Some(lb) = leaderboard.as_mut() {
+                        lb.maybe_submit(&snapshot);
+                    }
+                }
                 Err(e) => warn!("{ip}: poll failed: {e:#}"),
             }
         }
