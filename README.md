@@ -1,7 +1,7 @@
 # bitaxe-baller-companion
 
 Standalone ESP32 firmware that polls a handful of [Bitaxe](https://github.com/bitaxeorg) miners
-on the LAN and phones home the same two ways [bitaxe-baller](https://github.com/) does from a PC:
+on the LAN and phones home the same two ways [bitaxe-baller](https://github.com/465media/bitaxe-baller) does from a PC:
 
 - **Leaderboard** - HTTPS POST to `bitaxeballer.com/api/leaderboard/submit` on a new
   career-best share, plus a 30min keep-alive otherwise.
